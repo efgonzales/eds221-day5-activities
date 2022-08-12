@@ -1,0 +1,60 @@
+---
+title: "Task 2 Wild Data"
+author: "Elise Gonzales"
+date: "2022-08-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+```{r}
+#read in data
+us_tilapia_imports <- read_csv(here("data", "us_tilapia_imports.csv"))
+```
+
+```{r}
+#explore data
+summary(us_tilapia_imports)
+names(us_tilapia_imports)
+dim(us_tilapia_imports)
+skimr::skim(us_tilapia_imports)
+```
+
+```{r}
+#pivot data
+us_tilapia_imports_longer <- us_tilapia_imports |> pivot_longer(cols = -country, values_to = "annual_vol", names_to = "year")
+
+#check class of year
+class(us_tilapia_imports_longer$year)
+
+#change class to numeric
+tilapia_year_num <- us_tilapia_imports_longer |> 
+  mutate(year = as.numeric(year))
+
+class(tilapia_year_num$year)
+
+```
+
+#use "tilapia_year_num"
+#find the total US tilapia imports by year.
+```{r}
+yearly_tilapia_tot <- tilapia_year_num |> group_by(year) |> summarize(yearly_tilapia_tot = sum(year, na.rm = TRUE))
+
+ggplot(data = yearly_tilapia_tot, aes( x = yearly_tilapia_tot, y = year)) + geom_line() + labs(x = "Annual total volume of tilapia", y = "Year") + ggsave(here("figs", "tilapia_tot.png"))
+```
+
+#create a subset of select countries
+```{r}
+countries_sub <- tilapia_year_num |> 
+  filter(country %in% c("Ecuador", "Honduras", "Costa Rica", "Mexico"))
+
+ggplot(data = countries_sub, aes(x = annual_vol, y = year)) + geom_line(aes(color = country)) 
+```
+
+##switch x/y-axes for above plots
